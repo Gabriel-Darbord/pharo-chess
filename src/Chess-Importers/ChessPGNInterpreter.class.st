@@ -107,12 +107,10 @@ ChessPGNInterpreter >> interpretPGN: pgnString afterMoveDo: aBlock [
 	parser := ChessPGNParser forString: pgnString.
 	parser parseOnlyMovementsDo: [ :movement | "a movement contains two moves: white's and black's"
 		whiteToPlay := true.
-		self interpretMove: movement second.
-		aBlock value.
+		aBlock cull: (self interpretMove: movement second).
 
 		whiteToPlay := false.
-		self interpretMove: movement third.
-		aBlock value ]
+		aBlock cull: (self interpretMove: movement third) ]
 ]
 
 { #category : 'testing' }
@@ -229,7 +227,7 @@ ChessPGNInterpreter >> moveKing: move [
 		        piece isNotNil and: [
 			        piece class = MyKing and: [ "same color"
 				        whiteToPlay = piece isWhite ] ] ].
-	self move: king to: (self moveDestination: move)
+	^ self move: king to: (self moveDestination: move)
 ]
 
 { #category : 'moves' }
@@ -312,7 +310,7 @@ ChessPGNInterpreter >> movePawnTakes: move [
 			        ifFalse: [ 1 ]).
 	origin := String with: col with: row.
 
-	self move: (game board at: origin) contents to: (move last: 2)
+	^ self move: (game board at: origin) contents to: (move last: 2)
 ]
 
 { #category : 'moves' }
