@@ -16,5 +16,7 @@ BaselineOfChess >> baseline: spec [
 
 		spec
 			package: 'Chess-Importers';
-			package: 'Chess-Animated' with: 'Chess-Importers' ]
+			package: 'Chess-Animated' with: 'Chess-Importers';
+			package: 'Chess-UCI';
+			package: 'Chess-Stockfish' with: 'Chess-UCI' ]
 ]
