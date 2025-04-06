@@ -15,8 +15,9 @@ BaselineOfChess >> baseline: spec [
 			with: [ spec repository: 'github://UnivLille-Meta/Chess:main' ].
 
 		spec
+			package: 'Chess-Core'
+			with: [ spec requires: #( 'Chess-Importers' 'Chess-UCI' ) ];
 			package: 'Chess-Importers';
 			package: 'Chess-Animated' with: 'Chess-Importers';
-			package: 'Chess-UCI';
-			package: 'Chess-Stockfish' with: 'Chess-UCI' ]
+			package: 'Chess-UCI' ]
 ]

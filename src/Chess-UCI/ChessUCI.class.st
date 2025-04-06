@@ -15,18 +15,30 @@ Class {
 	#name : 'ChessUCI',
 	#superclass : 'Object',
 	#instVars : [
-		'process'
+		'process',
+		'command',
+		'arguments'
 	],
 	#category : 'Chess-UCI',
 	#package : 'Chess-UCI'
 }
 
 { #category : 'instance creation' }
-ChessUCI class >> executable: pathString withArguments: arguments [
+ChessUCI class >> create: pathString withArguments: arguments [
+	"Initialize an engine process using:
+	- command or executable path
+	- arguments: array of string arguments for the engine process"
 
 	^ self basicNew initialize autoRelease
-		  create: pathString
-		  withArguments: arguments
+		  command: pathString;
+		  arguments: arguments;
+		  startEngine
+]
+
+{ #category : 'class initialization' }
+ChessUCI class >> initialize [
+
+	SessionManager default registerUserClassNamed: self name
 ]
 
 { #category : 'instance creation' }
@@ -35,6 +47,38 @@ ChessUCI class >> new [
 
 	self error:
 		'Use `executable: ''path/to/engine'' withArguments: { ''-eg'' }`'
+]
+
+{ #category : 'system startup' }
+ChessUCI class >> shutDown: quitting [
+
+	quitting ifFalse: [ ^ self ].
+	self allSubInstancesDo: [ :uci | uci destroy ]
+]
+
+{ #category : 'system startup' }
+ChessUCI class >> startUp: resuming [
+
+	resuming ifFalse: [ ^ self ].
+	self allSubInstancesDo: [ :uci | uci startEngine ]
+]
+
+{ #category : 'accessing' }
+ChessUCI >> arguments [
+
+	^ arguments
+]
+
+{ #category : 'accessing' }
+ChessUCI >> arguments: aStringCollection [
+
+	arguments := aStringCollection
+]
+
+{ #category : 'converting' }
+ChessUCI >> asEngine [
+
+	^ self engineClass new uci: self
 ]
 
 { #category : 'initialization' }
@@ -53,7 +97,11 @@ ChessUCI >> awaitBestMove [
 	[ (line := self read) beginsWith: 'bestmove' ] whileFalse.
 	best := line
 		        copyFrom: 10
-		        to: (line indexOf: Character space startingAt: 14) - 1.
+		        to:
+			        (line indexOf: Character space startingAt: 14 ifAbsent: [
+				         ^ {
+					           (line copyFrom: 10 to: line size).
+					           nil } ]) - 1.
 	ponder := line
 		          copyFrom: (line lastIndexOf: Character space) + 1
 		          to: line size.
@@ -104,38 +152,46 @@ ChessUCI >> awaitUCI [
 	self read: 'uciok'
 ]
 
-{ #category : 'API' }
-ChessUCI >> create: engine withArguments: arguments [
-	"Initialize an engine process using:
-	- engine: command or executable path
-	- arguments: array of string arguments for the engine process"
+{ #category : 'accessing' }
+ChessUCI >> command [
 
-	(process := OSSUnixSubprocess new)
-		command: engine;
-		arguments: arguments;
-		redirectStdin;
-		redirectStdoutTo: process systemAccessor makeBlockingPipe;
-		run.
+	^ command
+]
 
-	self awaitUCI awaitReady "Ask engine to use uci and wait until it is ready"
+{ #category : 'accessing' }
+ChessUCI >> command: pathString [
+
+	command := pathString
 ]
 
 { #category : 'API' }
 ChessUCI >> destroy [
-	"Quit the engine and cleanup process"
+	"Ensure the engine process stops and clean up"
 
-	self quit.
-	[
-	[ process waitForExit ]
+	| theProcess |
+	process isComplete ifTrue: [ ^ self ].
+	process stdinStream closed
+		ifFalse: [ "send quit command" self quit ]
+		ifTrue: [ "cannot communicate" process terminate ].
+	theProcess := process. "don't lose track of the instance"
+	[ "ensure process resources are cleaned"
+	[ theProcess waitForExit ]
 		valueWithin: 1 second
-		onTimeout: [ process terminate ].
-	process closeAndCleanStreams ] fork
+		onTimeout: [ theProcess kill ].
+	theProcess waitForExit.
+	theProcess closeAndCleanStreams ] fork
+]
+
+{ #category : 'converting' }
+ChessUCI >> engineClass [
+
+	^ ChessEngine
 ]
 
 { #category : 'finalization' }
 ChessUCI >> finalize [
 
-	process ifNotNil: [ self destroy ]
+	(process isNil or: [ process isComplete ]) ifFalse: [ self destroy ]
 ]
 
 { #category : 'private' }
@@ -169,6 +225,7 @@ ChessUCI >> goWith [
 	The search ends when it hits any one of those limits.
 	Use the API of UCIGoBuilder to configure and send this command."
 
+	self nextPutAll: 'go'.
 	^ ChessUCIGoBuilder on: self
 ]
 
@@ -201,7 +258,7 @@ ChessUCI >> ponderHit [
 ]
 
 { #category : 'UCI' }
-ChessUCI >> positionFen: fenString [
+ChessUCI >> positionFEN: fenString [
 	"Set up the position described in fenString"
 
 	self nextPutAll: 'position fen '.
@@ -210,7 +267,7 @@ ChessUCI >> positionFen: fenString [
 ]
 
 { #category : 'UCI' }
-ChessUCI >> positionFen: fenString moves: moves [
+ChessUCI >> positionFEN: fenString moves: moves [
 	"Set up the position described in fenString and play the moves.
 	Moves are given as an array of strings in long algebraic notation."
 
@@ -250,7 +307,7 @@ ChessUCI >> quit [
 	self write: 'quit'
 ]
 
-{ #category : 'private' }
+{ #category : 'API' }
 ChessUCI >> read [
 	"Read the next line from engine's stdout on a blocking pipe."
 
@@ -316,6 +373,25 @@ ChessUCI >> setOption: name value: optionValue [
 	self nextPutAll: ' value '.
 	self nextPutAll: optionValue.
 	self flush
+]
+
+{ #category : 'private' }
+ChessUCI >> startEngine [
+
+	self startEngineProcess.
+	self awaitUCI awaitReady "Ask engine to use uci and wait until it is ready"
+]
+
+{ #category : 'private' }
+ChessUCI >> startEngineProcess [
+
+	(process := OSSUnixSubprocess new)
+		command: command;
+		arguments: arguments;
+		redirectStdin;
+		redirectStdoutTo: process systemAccessor makeBlockingPipe;
+		redirectStderr;
+		run
 ]
 
 { #category : 'UCI' }

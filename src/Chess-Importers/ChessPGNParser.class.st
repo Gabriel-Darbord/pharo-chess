@@ -5,6 +5,35 @@ Class {
 	#package : 'Chess-Importers'
 }
 
+{ #category : 'as yet unclassified' }
+ChessPGNParser >> parseMovement [
+
+	| nextToken moveNumber firstMovement |
+	nextToken := self peekToken.
+	(#( '1-0' '0-1' '1/2-1/2' '*' ) includes: nextToken) ifTrue: [ ^ nil ].
+
+	moveNumber := self parseMoveNumber.
+	nextToken := self peekToken.
+	(nextToken isNil or: [
+		 nextToken first isDigit or: [
+			 #( '1-0' '0-1' '1/2-1/2' '*' ) includes: nextToken ] ]) ifTrue: [
+		^ nil ].
+
+	firstMovement := self nextToken.
+	nextToken := self peekToken.
+	(nextToken isNil or: [
+		 nextToken first isDigit or: [
+			 #( '1-0' '0-1' '1/2-1/2' '*' ) includes: nextToken ] ]) ifTrue: [
+		^ {
+			  moveNumber.
+			  firstMovement } ].
+
+	^ {
+		  moveNumber.
+		  firstMovement.
+		  self nextToken }
+]
+
 { #category : 'enumerating' }
 ChessPGNParser >> parseOnlyMovementsDo: aBlock [
 

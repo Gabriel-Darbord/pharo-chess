@@ -1,49 +1,9 @@
 Class {
 	#name : 'ChessPGNInterpreter',
-	#superclass : 'Object',
-	#instVars : [
-		'whiteToPlay',
-		'game'
-	],
+	#superclass : 'ChessInterpreter',
 	#category : 'Chess-Importers',
 	#package : 'Chess-Importers'
 }
-
-{ #category : 'testing' }
-ChessPGNInterpreter >> bishopCanReach: destination from: source [
-
-	| srcCol srcRow dstCol dstRow colDelta rowDelta colStep rowStep |
-	srcCol := 'abcdefgh' indexOf: source first.
-	srcRow := source second digitValue.
-	dstCol := 'abcdefgh' indexOf: destination first.
-	dstRow := destination second digitValue.
-
-	colDelta := dstCol - srcCol.
-	rowDelta := dstRow - srcRow.
-	colDelta abs = rowDelta abs ifFalse: [ ^ false ].
-
-	colStep := colDelta sign.
-	rowStep := rowDelta sign.
-
-	^ (1 to: colDelta abs - 1) noneSatisfy: [ :i |
-		  | c r |
-		  c := srcCol + (i * colStep).
-		  r := srcRow + (i * rowStep).
-		  (game board at:
-			   (String with: (c + 96) asCharacter with: r asCharacterDigit))
-			  hasPiece ]
-]
-
-{ #category : 'utilities' }
-ChessPGNInterpreter >> classForPiece: notation [
-
-	notation = $K ifTrue: [ ^ MyKing ].
-	notation = $Q ifTrue: [ ^ MyQueen ].
-	notation = $R ifTrue: [ ^ MyRook ].
-	notation = $B ifTrue: [ ^ MyBishop ].
-	notation = $N ifTrue: [ ^ MyKnight ].
-	self error: 'Invalid piece notation: ' , notation asString
-]
 
 { #category : 'utilities' }
 ChessPGNInterpreter >> disambiguate: candidatePieces with: disambiguation [
@@ -65,16 +25,21 @@ ChessPGNInterpreter >> disambiguate: candidatePieces with: disambiguation [
 	self error: 'Ambiguous piece move'
 ]
 
-{ #category : 'accessing' }
-ChessPGNInterpreter >> game [
+{ #category : 'playing' }
+ChessPGNInterpreter >> interpret: pgnString afterMoveDo: aBlock [
 
-	^ game
-]
+	| parser |
+	pgnString ifEmpty: [ ^ self ].
+	game ifNil: [ self reset ].
+	parser := ChessPGNParser forString: pgnString.
+	parser parseOnlyMovementsDo: [ :movement | "a movement contains two moves: white's and black's"
+		movement size > 1 ifTrue: [
+			whiteToPlay := true.
+			aBlock cull: (self interpretMove: movement second).
 
-{ #category : 'accessing' }
-ChessPGNInterpreter >> game: aChessGame [
-
-	game := aChessGame
+			movement size > 2 ifTrue: [
+				whiteToPlay := false.
+				aBlock cull: (self interpretMove: movement third) ] ] ]
 ]
 
 { #category : 'playing' }
@@ -93,71 +58,6 @@ ChessPGNInterpreter >> interpretMove: move [
 	self error: 'Invalid move notation: ' , move
 ]
 
-{ #category : 'playing' }
-ChessPGNInterpreter >> interpretPGN: pgnString [
-
-	self interpretPGN: pgnString afterMoveDo: [  ]
-]
-
-{ #category : 'playing' }
-ChessPGNInterpreter >> interpretPGN: pgnString afterMoveDo: aBlock [
-
-	| parser |
-	game ifNil: [ self reset ].
-	parser := ChessPGNParser forString: pgnString.
-	parser parseOnlyMovementsDo: [ :movement | "a movement contains two moves: white's and black's"
-		whiteToPlay := true.
-		aBlock cull: (self interpretMove: movement second).
-
-		whiteToPlay := false.
-		aBlock cull: (self interpretMove: movement third) ]
-]
-
-{ #category : 'testing' }
-ChessPGNInterpreter >> isStraightPathClearFrom: source to: destination [
-	"Return true if all squares strictly between origin and destination are empty."
-
-	| srcColChar srcRowChar srcRow dstRow |
-	srcColChar := source first.
-	srcRowChar := source second.
-	srcRow := srcRowChar digitValue.
-	dstRow := destination second digitValue.
-
-	srcRow = dstRow ifTrue: [
-		| srcCol dstCol |
-		srcCol := srcColChar asInteger - 96. "96 = $a asInteger - 1"
-		dstCol := destination first asInteger - 96.
-		^ ((srcCol min: dstCol) + 1 to: (srcCol max: dstCol) - 1)
-			  noneSatisfy: [ :c |
-				  (game board at:
-					   (String with: (c + 96) asCharacter with: srcRowChar)) hasPiece ] ].
-
-	^ ((srcRow min: dstRow) + 1 to: (srcRow max: dstRow) - 1)
-		  noneSatisfy: [ :r |
-			  (game board at:
-				   (String with: srcColChar with: r asCharacterDigit)) hasPiece ]
-]
-
-{ #category : 'testing' }
-ChessPGNInterpreter >> isWhiteSquare: square [
-
-	| col row |
-	col := 'abcdefgh' indexOf: square first.
-	row := square second digitValue.
-	^ (col + row) odd
-]
-
-{ #category : 'utilities' }
-ChessPGNInterpreter >> move: piece to: squareName [
-	"Bypass move legality check"
-
-	| square |
-	square := game board at: squareName.
-	piece square emptyContents.
-	piece square: square.
-	square contents: piece
-]
-
 { #category : 'moves' }
 ChessPGNInterpreter >> moveBishop: move [
 	"Simply look for the same color bishop.
@@ -167,35 +67,11 @@ ChessPGNInterpreter >> moveBishop: move [
 	destination := self moveDestination: move.
 	isWhite := self isWhiteSquare: destination.
 	candidates := self selectPieces: [ :piece |
-		              piece class = MyBishop and: [ "same square color"
+		              piece isBishop and: [ "same square color"
 			              isWhite = (self isWhiteSquare: piece square name) ] ].
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
 	self notYetImplemented "TODO disambiguate, or find closest to destination if on the same diagonal"
-]
-
-{ #category : 'moves' }
-ChessPGNInterpreter >> moveCastle [
-
-	whiteToPlay
-		ifTrue: [
-			self move: (game board at: 'e1') contents to: 'g1'.
-			self move: (game board at: 'h1') contents to: 'f1' ]
-		ifFalse: [
-			self move: (game board at: 'e8') contents to: 'g8'.
-			self move: (game board at: 'h8') contents to: 'f8' ]
-]
-
-{ #category : 'moves' }
-ChessPGNInterpreter >> moveCastleLong [
-
-	whiteToPlay
-		ifTrue: [
-			self move: (game board at: 'e1') contents to: 'c1'.
-			self move: (game board at: 'a1') contents to: 'd1' ]
-		ifFalse: [
-			self move: (game board at: 'e8') contents to: 'c8'.
-			self move: (game board at: 'a8') contents to: 'd8' ]
 ]
 
 { #category : 'utilities' }
@@ -225,7 +101,7 @@ ChessPGNInterpreter >> moveKing: move [
 	| king |
 	king := game pieces detect: [ :piece |
 		        piece isNotNil and: [
-			        piece class = MyKing and: [ "same color"
+			        piece isKing and: [ "same color"
 				        whiteToPlay = piece isWhite ] ] ].
 	^ self move: king to: (self moveDestination: move)
 ]
@@ -237,14 +113,14 @@ ChessPGNInterpreter >> moveKnight: move [
 	destination := self moveDestination: move.
 	validOrigins := self validKnightMovesFrom: destination.
 	candidates := self selectPieces: [ :piece |
-		              piece class = MyKnight and: [
+		              piece isKnight and: [
 			              validOrigins includes: piece square name ] ].
 
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
 	candidates ifEmpty: [ self notYetImplemented ].
-	candidates size > 2 ifTrue: [
-		self notYetImplemented "possible w/ promotion" ].
+
+	move size > 3 ifFalse: [ self error: 'Ambiguous PGN' ].
 
 	disambiguation := move second.
 	candidates := ('abcdefgh' includes: disambiguation)
@@ -287,7 +163,7 @@ ChessPGNInterpreter >> movePawnForward: move [
 
 	| candidates |
 	candidates := self selectPieces: [ :piece |
-		              piece class = MyPawn and: [ "same column"
+		              piece isPawn and: [ "same column"
 			              piece square name first = move first ] ].
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: (self moveDestination: move) ].
@@ -318,7 +194,7 @@ ChessPGNInterpreter >> moveQueen: move [
 
 	| destination candidates |
 	destination := self moveDestination: move.
-	candidates := self selectPieces: [ :piece | piece class = MyQueen ].
+	candidates := self selectPieces: [ :piece | piece isQueen ].
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
 
@@ -342,7 +218,7 @@ ChessPGNInterpreter >> moveRook: move [
 	| destination candidates |
 	destination := self moveDestination: move.
 	candidates := self selectPieces: [ :piece |
-		              piece class = MyRook and: [
+		              piece isRook and: [
 			              self
 				              rookCanReach: destination
 				              from: piece square name ] ].
@@ -350,66 +226,4 @@ ChessPGNInterpreter >> moveRook: move [
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
 	self notYetImplemented "TODO: disambiguate if multiple candidates exist"
-]
-
-{ #category : 'utilities' }
-ChessPGNInterpreter >> promotePawnAt: coords to: pieceNotation [
-
-	| square piece |
-	square := game board at: coords.
-	piece := (self classForPiece: pieceNotation) new.
-	piece color: square contents color.
-	piece square: square.
-	square contents: piece
-]
-
-{ #category : 'testing' }
-ChessPGNInterpreter >> queenCanReach: destination from: origin [
-	"Return true if a queen at origin can reach destination (rook or bishop path), and path is clear."
-
-	^ (self rookCanReach: destination from: origin) or: [
-		  self bishopCanReach: destination from: origin ]
-]
-
-{ #category : 'initialization' }
-ChessPGNInterpreter >> reset [
-
-	game := MyChessGame freshGame.
-	game size: 400 @ 400
-]
-
-{ #category : 'testing' }
-ChessPGNInterpreter >> rookCanReach: destination from: origin [
-	"Return true if a rook at `origin` can legally reach `destination` by row or column, taking obstructions into account."
-
-	^ (origin first = destination first or: [
-		   origin second = destination second ]) and: [
-		  self isStraightPathClearFrom: origin to: destination ]
-]
-
-{ #category : 'utilities' }
-ChessPGNInterpreter >> selectPieces: aBlock [
-
-	^ game pieces select: [ :piece |
-		  piece isNotNil and: [ "of player color, check using XNOR: (T=T)|(F=F)"
-			  whiteToPlay = piece isWhite and: [ aBlock value: piece ] ] ]
-]
-
-{ #category : 'utilities' }
-ChessPGNInterpreter >> validKnightMovesFrom: move [
-
-	| col row offsets newCol newRow |
-	col := 'abcdefgh' indexOf: move first.
-	row := move second digitValue.
-
-	offsets := #( (  1  2 ) (  2  1 ) (  2 -1 ) (  1 -2 )
-	              ( -1 -2 ) ( -2 -1 ) ( -2  1 ) ( -1  2 ) ).
-
-	^ offsets
-		  select: [ :offset |
-			  newCol := col + offset first.
-			  newRow := row + offset second.
-			  (newCol between: 1 and: 8) and: [ newRow between: 1 and: 8 ] ]
-		  thenCollect: [ :offest |
-			  String with: ('abcdefgh' at: newCol) with: newRow asString first ]
 ]

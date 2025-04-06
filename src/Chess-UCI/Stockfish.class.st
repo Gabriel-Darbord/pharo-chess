@@ -8,14 +8,14 @@ Stockfish offers additional non-standard UCI commands.
 Class {
 	#name : 'Stockfish',
 	#superclass : 'ChessUCI',
-	#category : 'Chess-Stockfish',
-	#package : 'Chess-Stockfish'
+	#category : 'Chess-UCI',
+	#package : 'Chess-UCI'
 }
 
 { #category : 'instance creation' }
 Stockfish class >> new [
 
-	^ self executable: 'stockfish' withArguments: #(  )
+	^ self create: 'stockfish' withArguments: #(  )
 ]
 
 { #category : 'UCI - sync' }
@@ -24,6 +24,12 @@ Stockfish >> display [
 
 	self write: 'd'.
 	^ self readUntil: [ :line | line beginsWith: 'Checkers:' ]
+]
+
+{ #category : 'converting' }
+Stockfish >> engineClass [
+
+	^ ChessStockfishEngine
 ]
 
 { #category : 'UCI - sync' }

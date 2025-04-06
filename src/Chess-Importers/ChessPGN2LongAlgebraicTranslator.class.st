@@ -1,12 +1,12 @@
 Class {
-	#name : 'ChessPGNLongAlgebraicTranslator',
+	#name : 'ChessPGN2LongAlgebraicTranslator',
 	#superclass : 'ChessPGNInterpreter',
 	#category : 'Chess-Importers',
 	#package : 'Chess-Importers'
 }
 
 { #category : 'utilities' }
-ChessPGNLongAlgebraicTranslator >> move: piece to: destination [
+ChessPGN2LongAlgebraicTranslator >> move: piece to: destination [
 
 	| origin |
 	origin := piece square name.
@@ -15,7 +15,7 @@ ChessPGNLongAlgebraicTranslator >> move: piece to: destination [
 ]
 
 { #category : 'moves' }
-ChessPGNLongAlgebraicTranslator >> moveCastle [
+ChessPGN2LongAlgebraicTranslator >> moveCastle [
 
 	super moveCastle.
 	^ whiteToPlay
@@ -24,7 +24,7 @@ ChessPGNLongAlgebraicTranslator >> moveCastle [
 ]
 
 { #category : 'moves' }
-ChessPGNLongAlgebraicTranslator >> moveCastleLong [
+ChessPGN2LongAlgebraicTranslator >> moveCastleLong [
 
 	super moveCastleLong.
 	^ whiteToPlay
@@ -33,7 +33,7 @@ ChessPGNLongAlgebraicTranslator >> moveCastleLong [
 ]
 
 { #category : 'moves' }
-ChessPGNLongAlgebraicTranslator >> movePawn: move [
+ChessPGN2LongAlgebraicTranslator >> movePawn: move [
 
 	| xIndex eIndex moveNoSuffix notation |
 	xIndex := move indexOf: $x. "pawn takes?"
@@ -58,12 +58,12 @@ ChessPGNLongAlgebraicTranslator >> movePawn: move [
 ]
 
 { #category : 'translate' }
-ChessPGNLongAlgebraicTranslator >> translatePGN: pgnString [
+ChessPGN2LongAlgebraicTranslator >> translatePGN: pgnString [
 
 	| index |
 	index := 0.
 	^ String streamContents: [ :s |
-		  self interpretPGN: pgnString afterMoveDo: [ :move |
+		  self interpret: pgnString afterMoveDo: [ :move |
 			  s nextPut: Character space.
 			  (index := index + 1) odd ifTrue: [
 				  s print: index.

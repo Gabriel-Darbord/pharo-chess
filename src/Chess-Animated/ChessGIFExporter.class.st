@@ -54,7 +54,7 @@ ChessGIFExporter >> fromPGN: pgnString [
 	interpreter := ChessPGNInterpreter new.
 
 	interpreter
-		interpretPGN: pgnString
+		interpret: pgnString
 		afterMoveDo: [
 		frames add: (self captureBoard: interpreter game board) ].
 
