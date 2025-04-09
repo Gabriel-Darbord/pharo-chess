@@ -1,8 +1,9 @@
 Class {
 	#name : 'ChessPGNInterpreter',
 	#superclass : 'ChessInterpreter',
-	#category : 'Chess-Importers',
-	#package : 'Chess-Importers'
+	#category : 'Chess-Importers-Interpreters',
+	#package : 'Chess-Importers',
+	#tag : 'Interpreters'
 }
 
 { #category : 'utilities' }

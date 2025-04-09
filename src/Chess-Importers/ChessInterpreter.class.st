@@ -5,8 +5,9 @@ Class {
 		'game',
 		'whiteToPlay'
 	],
-	#category : 'Chess-Importers',
-	#package : 'Chess-Importers'
+	#category : 'Chess-Importers-Interpreters',
+	#package : 'Chess-Importers',
+	#tag : 'Interpreters'
 }
 
 { #category : 'testing' }
@@ -132,27 +133,27 @@ ChessInterpreter >> move: piece to: squareName [
 { #category : 'moves' }
 ChessInterpreter >> moveCastle [
 
+	game currentPlayer canCastle: false.
 	whiteToPlay
 		ifTrue: [
 			self move: (game board at: 'e1') contents to: 'g1'.
-			self move: (game board at: 'h1') contents to: 'f1' ]
+			(game board at: 'h1') contents moveTo: (game board at: 'f1') ]
 		ifFalse: [
 			self move: (game board at: 'e8') contents to: 'g8'.
-			self move: (game board at: 'h8') contents to: 'f8' ].
-	game currentPlayer canCastle: false
+			(game board at: 'h8') contents moveTo: (game board at: 'f8') ]
 ]
 
 { #category : 'moves' }
 ChessInterpreter >> moveCastleLong [
 
+	game currentPlayer canCastle: false.
 	whiteToPlay
 		ifTrue: [
 			self move: (game board at: 'e1') contents to: 'c1'.
-			self move: (game board at: 'a1') contents to: 'd1' ]
+			(game board at: 'a1') contents moveTo: (game board at: 'd1') ]
 		ifFalse: [
 			self move: (game board at: 'e8') contents to: 'c8'.
-			self move: (game board at: 'a8') contents to: 'd8' ].
-	game currentPlayer canCastle: false
+			(game board at: 'a8') contents moveTo: (game board at: 'd8') ]
 ]
 
 { #category : 'utilities' }

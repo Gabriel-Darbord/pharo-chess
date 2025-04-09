@@ -1,8 +1,9 @@
 Class {
 	#name : 'ChessLongAlgebraicInterpreter',
 	#superclass : 'ChessInterpreter',
-	#category : 'Chess-Importers',
-	#package : 'Chess-Importers'
+	#category : 'Chess-Importers-Interpreters',
+	#package : 'Chess-Importers',
+	#tag : 'Interpreters'
 }
 
 { #category : 'playing' }
@@ -15,12 +16,14 @@ ChessLongAlgebraicInterpreter >> interpret: aString afterMoveDo: aBlock [
 ChessLongAlgebraicInterpreter >> interpretMove: move [
 
 	| destination result |
-	game currentPlayer canCastle ifTrue: [
-		whiteToPlay ifTrue: [
-			move = 'e1g1' ifTrue: [ ^ self moveCastle ].
-			move = 'e1c1' ifTrue: [ ^ self moveCastleLong ] ].
-		move = 'e8g8' ifTrue: [ ^ self moveCastle ].
-		move = 'e8c8' ifTrue: [ ^ self moveCastleLong ] ].
+	game currentPlayer canCastleKingside ifTrue: [
+		whiteToPlay
+			ifTrue: [ move = 'e1g1' ifTrue: [ ^ self moveCastle ] ]
+			ifFalse: [ move = 'e8g8' ifTrue: [ ^ self moveCastle ] ] ].
+	game currentPlayer canCastleQueenside ifTrue: [
+		whiteToPlay
+			ifTrue: [ move = 'e1c1' ifTrue: [ ^ self moveCastleLong ] ]
+			ifFalse: [ move = 'e8c8' ifTrue: [ ^ self moveCastleLong ] ] ].
 
 	destination := move copyFrom: 3 to: 4.
 
