@@ -1,8 +1,8 @@
 Class {
 	#name : 'ChessLongAlgebraicWriter',
 	#superclass : 'ChessWriter',
-	#category : 'Chess-Importers-Writer',
-	#package : 'Chess-Importers',
+	#category : 'Chess-Notations-Writer',
+	#package : 'Chess-Notations',
 	#tag : 'Writer'
 }
 

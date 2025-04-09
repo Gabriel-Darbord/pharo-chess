@@ -1,8 +1,8 @@
 Class {
 	#name : 'ChessPGNParser',
 	#superclass : 'MyPGNParser',
-	#category : 'Chess-Importers-Parsers',
-	#package : 'Chess-Importers',
+	#category : 'Chess-Notations-Parsers',
+	#package : 'Chess-Notations',
 	#tag : 'Parsers'
 }
 

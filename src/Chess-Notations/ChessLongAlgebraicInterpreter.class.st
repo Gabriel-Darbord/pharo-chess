@@ -1,8 +1,8 @@
 Class {
 	#name : 'ChessLongAlgebraicInterpreter',
 	#superclass : 'ChessInterpreter',
-	#category : 'Chess-Importers-Interpreters',
-	#package : 'Chess-Importers',
+	#category : 'Chess-Notations-Interpreters',
+	#package : 'Chess-Notations',
 	#tag : 'Interpreters'
 }
 

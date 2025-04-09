@@ -19,8 +19,8 @@ BaselineOfChess >> baseline: spec [
 
 		spec
 			package: 'Chess-Core'
-			with: [ spec requires: #( 'Chess-Importers' 'Chess-UCI' ) ];
-			package: 'Chess-Importers';
-			package: 'Chess-Animated' with: 'Chess-Importers';
+			with: [ spec requires: #( 'Chess-Notations' 'Chess-UCI' ) ];
+			package: 'Chess-Notations';
+			package: 'Chess-Animated' with: 'Chess-Notations';
 			package: 'Chess-UCI' with: 'OSSubprocess' ]
 ]

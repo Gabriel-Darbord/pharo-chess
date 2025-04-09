@@ -4,8 +4,8 @@ Class {
 	#instVars : [
 		'moves'
 	],
-	#category : 'Chess-Importers-Writer',
-	#package : 'Chess-Importers',
+	#category : 'Chess-Notations-Writer',
+	#package : 'Chess-Notations',
 	#tag : 'Writer'
 }
 
