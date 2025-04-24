@@ -8,6 +8,20 @@ Class {
 	#package : 'Chess-Animated'
 }
 
+{ #category : 'instance creation' }
+ChessGIFExporter class >> fromFEN: fenString andPGN: pgnString [
+
+	^ self new
+		  fromPGN: pgnString
+		  onGame: (ChessGame fromFENString: fenString)
+]
+
+{ #category : 'instance creation' }
+ChessGIFExporter class >> fromPGN: pgnString [
+
+	^ self new fromPGN: pgnString
+]
+
 { #category : 'private' }
 ChessGIFExporter >> buildGIF: frames [
 
@@ -20,8 +34,10 @@ ChessGIFExporter >> buildGIF: frames [
 	[ frames do: [ :frame | writer nextPutFrame: frame ] ] ensure: [
 		writer close ].
 
-	self inform: 'Chess GIF created: '
-		, fileName asFileReference absolutePath pathString
+	self uiManager
+		inform: 'Chess GIF created: '
+			, fileName asFileReference absolutePath pathString
+		actionOnClick: [ fileName asFileReference openInOSFileBrowser ]
 ]
 
 { #category : 'private' }
@@ -35,8 +51,9 @@ ChessGIFExporter >> captureBoard: board [
 
 { #category : 'accessing' }
 ChessGIFExporter >> delay [
+	"In ms, default is 1 second."
 
-	^ delay ifNil: [ delay := 1 second asMilliSeconds ]
+	^ delay ifNil: [ delay := 1000 ]
 ]
 
 { #category : 'accessing' }
@@ -49,9 +66,15 @@ ChessGIFExporter >> delay: anInteger [
 { #category : 'API' }
 ChessGIFExporter >> fromPGN: pgnString [
 
+	^ self fromPGN: pgnString onGame: ChessGame freshGame
+]
+
+{ #category : 'API' }
+ChessGIFExporter >> fromPGN: pgnString onGame: chessGame [
+
 	| interpreter frames |
 	frames := OrderedCollection new.
-	interpreter := ChessPGNInterpreter new.
+	interpreter := ChessPGNInterpreter on: chessGame.
 
 	interpreter
 		interpret: pgnString
