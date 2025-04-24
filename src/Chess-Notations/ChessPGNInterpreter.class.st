@@ -120,7 +120,6 @@ ChessPGNInterpreter >> moveKnight: move [
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
 	candidates ifEmpty: [ self notYetImplemented ].
-
 	move size > 3 ifFalse: [ self error: 'Ambiguous PGN' ].
 
 	disambiguation := move second.

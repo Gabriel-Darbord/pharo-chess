@@ -12,7 +12,7 @@ ChessLongAlgebraicWriter >> move: piece to: square promotion: pieceNotation [
 	| origin destination |
 	origin := piece square name.
 	destination := square name.
-	moves add: (pieceNotation
+	self moves add: (pieceNotation
 			 ifNil: [ origin , destination ]
 			 ifNotNil: [ origin , destination , pieceNotation asLowercase ])
 ]
