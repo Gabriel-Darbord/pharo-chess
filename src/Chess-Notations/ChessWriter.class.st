@@ -30,12 +30,16 @@ ChessWriter >> moves [
 { #category : 'printing' }
 ChessWriter >> movesString [
 
+	| beforeFirst |
+	beforeFirst := true.
 	^ String streamContents: [ :s |
 		  moves withIndexDo: [ :move :i |
-			  s nextPut: Character space.
-			  i odd ifTrue: [
-				  i > 1 ifTrue: [ s cr ].
-				  s print: i // 2 + 1.
-				  s nextPutAll: '. ' ].
-			  s nextPutAll: move ] ]
+			  i odd
+				  ifFalse: [ beforeFirst ifFalse: [ s space ] ]
+				  ifTrue: [
+					  i > 1 ifTrue: [ s cr ].
+					  s print: i // 2 + 1.
+					  s nextPutAll: '. ' ].
+			  s nextPutAll: move.
+			  beforeFirst := false ] ]
 ]
