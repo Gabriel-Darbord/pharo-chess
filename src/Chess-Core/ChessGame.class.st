@@ -11,10 +11,11 @@ Class {
 }
 
 { #category : 'instance creation' }
-ChessGame class >> fromFENString: aFENString [
+ChessGame class >> fromFENString: fenString [
 
-	^ (super fromFENString: aFENString)
-		  startFEN: aFENString;
+	^ self basicNew initialize
+		  initializeFromFENGame: (ChessFENParser parse: fenString);
+		  startFEN: fenString;
 		  yourself
 ]
 
