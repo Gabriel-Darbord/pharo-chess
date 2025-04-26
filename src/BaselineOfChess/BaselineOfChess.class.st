@@ -1,3 +1,21 @@
+"
+# Unsafe Installation Script (04/25)
+```st
+[ Metacello new
+  repository: 'github://Gabriel-Darbord/pharo-chess:main/src';
+  baseline: 'Chess';
+  onConflictUseLoaded;
+  onWarning: #resume;
+  load ]
+on: KeyNotFound
+do: [ :e | ""skip missing Bloc and Toplo packages""
+	| ctx |
+	ctx := e signalerContext.
+	[ ctx := ctx sender.
+	  ctx method selector = #loadPackageDirective: ] whileFalse.
+	ctx resume ]
+```
+"
 Class {
 	#name : 'BaselineOfChess',
 	#superclass : 'BaselineOf',

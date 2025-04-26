@@ -123,13 +123,13 @@ ChessPGNInterpreter >> moveKnight: move [
 	move size > 3 ifFalse: [ self error: 'Ambiguous PGN' ].
 
 	disambiguation := move second.
-	candidates := ('abcdefgh' includes: disambiguation)
-		              ifTrue: [ "search column"
-			              candidates select: [ :piece |
-				              piece square name first = disambiguation ] ]
-		              ifFalse: [ "search row"
-			              candidates select: [ :piece |
-				              piece square name second = disambiguation ] ].
+	candidates := disambiguation isDigit
+		              ifTrue: [ "search row"
+				              candidates select: [ :piece |
+					              piece square name second = disambiguation ] ]
+		              ifFalse: [ "search column"
+				              candidates select: [ :piece |
+					              piece square name first = disambiguation ] ].
 
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
@@ -215,13 +215,25 @@ ChessPGNInterpreter >> moveQueen: move [
 { #category : 'moves' }
 ChessPGNInterpreter >> moveRook: move [
 
-	| destination candidates |
+	| destination candidates disambiguation |
 	destination := self moveDestination: move.
 	candidates := self selectPieces: [ :piece |
-		              piece isRook and: [
-			              self
-				              rookCanReach: destination
-				              from: piece square name ] ].
+			              piece isRook and: [
+				              self
+					              rookCanReach: destination
+					              from: piece square name ] ].
+
+	candidates size = 1 ifTrue: [
+		^ self move: candidates first to: destination ].
+
+	disambiguation := move second.
+	candidates := disambiguation isDigit
+		              ifTrue: [ "search row"
+				              candidates select: [ :piece |
+					              piece square name second = disambiguation ] ]
+		              ifFalse: [ "search column"
+				              candidates select: [ :piece |
+					              piece square name first = disambiguation ] ].
 
 	candidates size = 1 ifTrue: [
 		^ self move: candidates first to: destination ].
